@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  background: #0a0a0f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #0a0a0f;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: #0a0a0f;
+  color: #f7f7fb;
+  font-family: "DM Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+::selection {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}

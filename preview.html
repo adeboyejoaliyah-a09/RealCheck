@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RealCheck Preview</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #0a0a0f;
+        color: #f7f7fb;
+        font-family: "DM Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        min-height: 100vh;
+      }
+
+      .wrap {
+        width: min(1120px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 0;
+      }
+
+      .brand {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #6366f1;
+        background: #6366f1;
+        color: #fff;
+        padding: 12px 20px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .button.secondary {
+        background: transparent;
+        color: #c7d2fe;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 48px;
+        align-items: center;
+        padding: 72px 0 64px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        border: 1px solid #26263a;
+        background: #101019;
+        color: #c7d2fe;
+        padding: 8px 12px;
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 20px 0 0;
+        color: #fff;
+        font-size: clamp(44px, 8vw, 78px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 680px;
+        margin: 24px 0 0;
+        color: #d4d4d8;
+        font-size: 18px;
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        margin-top: 36px;
+      }
+
+      .muted {
+        color: #71717a;
+        font-size: 13px;
+      }
+
+      .panel {
+        border: 1px solid #26263a;
+        background: #0d0d14;
+      }
+
+      .bar {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #26263a;
+        padding: 12px 16px;
+        color: #71717a;
+        font-size: 12px;
+      }
+
+      pre {
+        margin: 0;
+        overflow: auto;
+        padding: 20px;
+        color: #e4e4e7;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        padding-bottom: 80px;
+      }
+
+      .card {
+        border: 1px solid #26263a;
+        background: #101019;
+        padding: 22px;
+      }
+
+      .stat {
+        color: #a5b4fc;
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        margin-bottom: 32px;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 0;
+        color: #fff;
+        font-size: 20px;
+      }
+
+      .copy {
+        color: #a1a1aa;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .demo {
+        border-top: 1px solid #26263a;
+        padding: 48px 0 80px;
+      }
+
+      .demo-shell {
+        width: min(800px, 100%);
+        margin: 0 auto;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #6366f1;
+        box-shadow: 0 0 8px #6366f1;
+      }
+
+      .demo-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #6366f1;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+
+      .demo h2 {
+        margin-top: 8px;
+        font-size: 24px;
+      }
+
+      .presets {
+        display: flex;
+        gap: 8px;
+        margin: 24px 0;
+      }
+
+      .preset {
+        border: 1px solid #2a2a3a;
+        border-radius: 6px;
+        background: transparent;
+        color: #666680;
+        padding: 6px 14px;
+        font: inherit;
+        font-size: 12px;
+      }
+
+      .preset.active {
+        border-color: #f59e0b;
+        background: #f59e0b22;
+        color: #f59e0b;
+      }
+
+      .signals {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 24px;
+        border: 1px solid #1e1e2e;
+        border-radius: 10px;
+        background: #10101a;
+        padding: 20px;
+      }
+
+      label {
+        display: block;
+        color: #555575;
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+
+      input {
+        width: 100%;
+        border: 1px solid #2a2a3a;
+        border-radius: 5px;
+        background: #0a0a14;
+        color: #c8c8d8;
+        padding: 6px 8px;
+        font: inherit;
+        font-size: 12px;
+      }
+
+      .run {
+        width: 100%;
+        margin: 20px 0;
+        border: 1px solid #6366f1;
+        border-radius: 8px;
+        background: #6366f122;
+        color: #818cf8;
+        padding: 13px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+
+      .result {
+        border: 1px solid #d97706;
+        border-radius: 10px;
+        background: #1c1400;
+        padding: 24px;
+      }
+
+      .badge {
+        display: inline-flex;
+        border-radius: 4px;
+        background: #b45309;
+        color: #fff;
+        padding: 4px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 2px;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      @media (max-width: 820px) {
+        .hero,
+        .features,
+        .signals,
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="wrap nav">
+        <a class="brand" href="#top">RealCheck</a>
+        <a class="button secondary" href="#demo">Live demo</a>
+      </header>
+
+      <section id="top" class="wrap hero">
+        <div>
+          <span class="eyebrow">Adaptive fraud decisioning</span>
+          <h1>Stop blocking real customers.</h1>
+          <p class="lede">
+            RealCheck gives fintechs and payment processors explainable, adaptive fraud decisions that separate risky behavior from legitimate urgency.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="#demo">Run fraud check</a>
+            <span class="muted">API-first. No black box declines.</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="bar">
+            <span>realcheck.js</span>
+            <span style="color:#a5b4fc">POST /v1/decisions</span>
+          </div>
+          <pre><code>const decision = await realcheck.decide({
+  user_id: "usr_9281",
+  amount: 248.90,
+  currency: "USD",
+  payment_method: "card",
+  device: request.device,
+  signals: request.riskSignals
+});
+
+if (decision.action === "challenge") {
+  return startSoftChallenge(decision.reason_codes);
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="wrap features">
+        <article class="card">
+          <div class="stat">&lt; 400ms</div>
+          <h2>Real-time decisions</h2>
+          <p class="copy">Return approve, block, or challenge decisions before checkout latency becomes a product problem.</p>
+        </article>
+        <article class="card">
+          <div class="stat">5 reasons</div>
+          <h2>Explainable reasons</h2>
+          <p class="copy">Every response includes readable signals, confidence, and next best action for risk and ops teams.</p>
+        </article>
+        <article class="card">
+          <div class="stat">adaptive</div>
+          <h2>Soft challenge flow</h2>
+          <p class="copy">Route uncertain sessions into low-friction verification instead of rejecting good customers.</p>
+        </article>
+      </section>
+
+      <section id="demo" class="demo">
+        <div class="demo-shell">
+          <div class="demo-title"><span class="dot"></span><span>RealCheck</span></div>
+          <h2>Fraud Decisioning Engine</h2>
+          <p class="muted">Adaptive / Explainable / Real-time</p>
+
+          <div class="presets">
+            <button class="preset">Likely legit</button>
+            <button class="preset active">Borderline</button>
+            <button class="preset">Likely fraud</button>
+          </div>
+
+          <div class="signals">
+            <div><label>device_id</label><input value="null" /></div>
+            <div><label>ip_country</label><input value="US" /></div>
+            <div><label>billing_country</label><input value="NG" /></div>
+            <div><label>ip_is_vpn</label><input value="true" /></div>
+            <div><label>session_duration_seconds</label><input value="45" /></div>
+            <div><label>attempts_last_90s</label><input value="2" /></div>
+            <div><label>amount_usd</label><input value="299" /></div>
+            <div><label>email_domain_age_days</label><input value="90" /></div>
+            <div><label>is_first_purchase</label><input value="true" /></div>
+            <div><label>prior_chargebacks</label><input value="0" /></div>
+          </div>
+
+          <button class="run">RUN FRAUD CHECK</button>
+
+          <div class="result">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span class="badge">CHALLENGE</span>
+                <span style="color:#fbbf24;font-size:12px">66% confidence</span>
+              </div>
+              <span style="border:1px solid #92400e;border-radius:4px;color:#fbbf24;font-size:11px;padding:3px 10px">Challenge: OTP</span>
+            </div>
+            <p style="color:#fbbf24;font-size:13px;line-height:1.6">
+              New device, VPN usage, first purchase, and moderate amount create enough risk to require soft verification.
+            </p>
+            <div class="split">
+              <div>
+                <div style="color:#ef4444;font-size:10px;letter-spacing:2px;text-transform:uppercase">Risk factors</div>
+                <p class="copy" style="color:#fca5a5">^ New device<br />^ VPN IP<br />^ Country mismatch</p>
+              </div>
+              <div>
+                <div style="color:#22c55e;font-size:10px;letter-spacing:2px;text-transform:uppercase">Safe factors</div>
+                <p class="copy" style="color:#86efac">+ No prior chargebacks<br />+ Only two attempts<br />+ Email domain is not new</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
