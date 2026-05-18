@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const SYSTEM_PROMPT = `You are RealCheck, a real-time fraud decisioning engine for payment processors and fintechs.
 
@@ -57,10 +57,13 @@ const presets = {
     label: "Likely legit",
     color: "#22c55e",
     signals: {
-      device_id: "fp_a3f9d2c1",
+      device_id: null,
+      ip_address: "102.89.44.10",
       ip_country: "NG",
       billing_country: "NG",
       ip_is_vpn: false,
+      ip_is_proxy: false,
+      ip_fraud_score: 0,
       session_duration_seconds: 180,
       attempts_last_90s: 1,
       amount_usd: 49,
@@ -75,9 +78,12 @@ const presets = {
     color: "#f59e0b",
     signals: {
       device_id: null,
+      ip_address: "8.8.8.8",
       ip_country: "US",
       billing_country: "NG",
       ip_is_vpn: true,
+      ip_is_proxy: false,
+      ip_fraud_score: 0,
       session_duration_seconds: 45,
       attempts_last_90s: 2,
       amount_usd: 299,
@@ -92,9 +98,12 @@ const presets = {
     color: "#ef4444",
     signals: {
       device_id: null,
+      ip_address: "45.142.122.90",
       ip_country: "RU",
       billing_country: "NG",
       ip_is_vpn: true,
+      ip_is_proxy: true,
+      ip_fraud_score: 0,
       session_duration_seconds: 8,
       attempts_last_90s: 7,
       amount_usd: 1200,
@@ -114,17 +123,50 @@ const decisionColors = {
 
 export default function RealCheck() {
   const [signals, setSignals] = useState(presets.borderline.signals);
+  const [visitorId, setVisitorId] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activePreset, setActivePreset] = useState("borderline");
   const [rawJson, setRawJson] = useState(false);
+  const [challengeOpen, setChallengeOpen] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [challengeStatus, setChallengeStatus] = useState("");
+  const [challengeLoading, setChallengeLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFingerprint() {
+      try {
+        const FingerprintJS = await import("@fingerprintjs/fingerprintjs");
+        const fp = await FingerprintJS.load();
+        const { visitorId: nextVisitorId } = await fp.get();
+
+        if (!cancelled) {
+          setVisitorId(nextVisitorId);
+          setSignals((prev) => ({ ...prev, device_id: nextVisitorId }));
+        }
+      } catch (caughtError) {
+        console.error("FingerprintJS failed:", caughtError);
+      }
+    }
+
+    loadFingerprint();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const applyPreset = (key) => {
     setActivePreset(key);
-    setSignals(presets[key].signals);
+    setSignals({ ...presets[key].signals, device_id: visitorId });
     setResult(null);
     setError(null);
+    setChallengeOpen(false);
+    setChallengeStatus("");
   };
 
   const updateSignal = (key, value) => {
@@ -136,8 +178,28 @@ export default function RealCheck() {
     setLoading(true);
     setResult(null);
     setError(null);
+    setChallengeOpen(false);
+    setChallengeStatus("");
 
     try {
+      const ipResponse = await fetch("/api/signals/ip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip_address: signals.ip_address })
+      });
+      const ipSignals = await ipResponse.json();
+
+      if (!ipResponse.ok) {
+        throw new Error(ipSignals.error || "Failed to enrich IP signals");
+      }
+
+      const enrichedSignals = {
+        ...signals,
+        ...ipSignals,
+        device_id: visitorId || signals.device_id
+      };
+      setSignals(enrichedSignals);
+
       const res = await fetch("/api/fraud-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,7 +207,7 @@ export default function RealCheck() {
           model: "claude-opus-4-6",
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
-          messages: [{ role: "user", content: USER_PROMPT(signals) }],
+          messages: [{ role: "user", content: USER_PROMPT(enrichedSignals) }],
           temperature: 1
         })
       });
@@ -160,10 +222,62 @@ export default function RealCheck() {
       const cleaned = text.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(cleaned);
       setResult(parsed);
+
+      if (parsed.decision === "CHALLENGE") {
+        setChallengeOpen(true);
+      }
     } catch (e) {
       setError(e.message || "Failed to get decision. Check your API key or network.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendOtp = async () => {
+    setChallengeLoading(true);
+    setChallengeStatus("");
+
+    try {
+      const response = await fetch("/api/challenge/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to send OTP");
+      }
+
+      setChallengeStatus("OTP sent");
+    } catch (caughtError) {
+      setChallengeStatus(caughtError.message || "Unable to send OTP");
+    } finally {
+      setChallengeLoading(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    setChallengeLoading(true);
+    setChallengeStatus("");
+
+    try {
+      const response = await fetch("/api/challenge/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to verify OTP");
+      }
+
+      setChallengeStatus(data.verified ? "✓ Verified — transaction approved" : "✗ Code incorrect");
+    } catch (caughtError) {
+      setChallengeStatus(caughtError.message || "✗ Code incorrect");
+    } finally {
+      setChallengeLoading(false);
     }
   };
 
@@ -232,7 +346,13 @@ export default function RealCheck() {
           {Object.entries(signals).map(([key, val]) => (
             <div key={key}>
               <div style={{ fontSize: 11, color: "#555575", marginBottom: 4 }}>{key}</div>
-              {typeof val === "boolean" ? (
+              {key === "device_id" ? (
+                <input
+                  value={val || "loading fingerprint..."}
+                  readOnly
+                  style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "5px 8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
+                />
+              ) : typeof val === "boolean" ? (
                 <select
                   value={val.toString()}
                   onChange={(e) => updateSignal(key, e.target.value === "true")}
@@ -387,6 +507,49 @@ export default function RealCheck() {
               {JSON.stringify(result, null, 2)}
             </pre>
           )}
+        </div>
+      )}
+
+      {challengeOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 50 }}>
+          <div style={{ width: "100%", maxWidth: 440, background: "#10101a", border: "1px solid #d97706", borderRadius: 10, padding: 20 }}>
+            <div style={{ fontSize: 11, color: "#fbbf24", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Soft challenge</div>
+            <p style={{ fontSize: 12, color: "#c8c8d8", lineHeight: 1.6, marginTop: 0 }}>
+              This transaction needs OTP verification before approval.
+            </p>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: "#555575", marginBottom: 4 }}>phone number</div>
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="+15551234567"
+                style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
+              />
+            </div>
+            <button onClick={sendOtp} disabled={challengeLoading} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #6366f1", background: "#6366f122", color: "#818cf8", fontSize: 12, fontWeight: 600, cursor: challengeLoading ? "not-allowed" : "pointer", fontFamily: "inherit", marginBottom: 12 }}>
+              Send OTP
+            </button>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: "#555575", marginBottom: 4 }}>code</div>
+              <input
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                placeholder="123456"
+                style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
+              />
+            </div>
+            <button onClick={verifyOtp} disabled={challengeLoading} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #d97706", background: "#1c1400", color: "#fbbf24", fontSize: 12, fontWeight: 600, cursor: challengeLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
+              Verify
+            </button>
+            {challengeStatus && (
+              <div style={{ marginTop: 12, color: challengeStatus.startsWith("✗") ? "#f87171" : "#86efac", fontSize: 12 }}>
+                {challengeStatus}
+              </div>
+            )}
+            <button onClick={() => setChallengeOpen(false)} style={{ marginTop: 14, background: "none", border: "none", color: "#666680", fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
+              close
+            </button>
+          </div>
         </div>
       )}
 

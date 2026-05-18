@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 
-function mockDecision(payload) {
+function parseDecisionText(text) {
+  const cleaned = String(text || "").replace(/```json|```/g, "").trim();
+  return JSON.parse(cleaned);
+}
+
+function extractSignals(payload) {
   const content = payload?.messages?.[0]?.content || "";
   const jsonMatch = content.match(/\{[\s\S]*\}$/);
-  const signals = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+  return jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+}
+
+function mockDecision(payload) {
+  const signals = extractSignals(payload);
 
   const riskFactors = [];
   const safeFactors = [];
@@ -16,12 +26,15 @@ function mockDecision(payload) {
   if (signals.ip_is_vpn) riskFactors.push("VPN or proxy IP detected");
   else safeFactors.push("No VPN or proxy signal");
 
+  if (signals.ip_is_proxy) riskFactors.push("Proxy IP detected");
+
   if (signals.ip_country && signals.billing_country && signals.ip_country !== signals.billing_country) {
     riskFactors.push("IP country differs from billing country");
   } else {
     safeFactors.push("IP and billing country align");
   }
 
+  if (Number(signals.ip_fraud_score) >= 75) riskFactors.push("High IP fraud score");
   if (Number(signals.attempts_last_90s) >= 5) riskFactors.push("High payment attempt velocity");
   else safeFactors.push("Payment attempt velocity is low");
 
@@ -36,7 +49,9 @@ function mockDecision(payload) {
   const score =
     (!signals.device_id ? 18 : 0) +
     (signals.ip_is_vpn ? 18 : 0) +
+    (signals.ip_is_proxy ? 12 : 0) +
     (signals.ip_country !== signals.billing_country ? 10 : 0) +
+    (Number(signals.ip_fraud_score) >= 75 ? 20 : Number(signals.ip_fraud_score) >= 50 ? 10 : 0) +
     (Number(signals.attempts_last_90s) >= 5 ? 22 : Number(signals.attempts_last_90s) >= 2 ? 8 : 0) +
     (Number(signals.amount_usd) >= 1000 ? 18 : Number(signals.amount_usd) >= 250 ? 8 : 0) +
     (Number(signals.email_domain_age_days) < 30 ? 14 : 0) +
@@ -61,16 +76,43 @@ function mockDecision(payload) {
   };
 }
 
+async function logTransaction(payload, decision) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+  if (!supabaseUrl || !serviceRoleKey || !decision) return;
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false }
+  });
+
+  const { error } = await supabase.from("transactions").insert({
+    decision: decision.decision,
+    confidence: decision.confidence,
+    reason: decision.reason,
+    signals: extractSignals(payload),
+    risk_factors: decision.risk_factors || [],
+    safe_factors: decision.safe_factors || []
+  });
+
+  if (error) {
+    console.error("Supabase transaction log failed:", error.message);
+  }
+}
+
 export async function POST(request) {
   const payload = await request.json();
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
 
   if (process.env.REALCHECK_MOCK === "true") {
+    const decision = mockDecision(payload);
+    await logTransaction(payload, decision);
+
     return NextResponse.json({
       content: [
         {
           type: "text",
-          text: JSON.stringify(mockDecision(payload), null, 2)
+          text: JSON.stringify(decision, null, 2)
         }
       ]
     });
@@ -108,6 +150,11 @@ export async function POST(request) {
         { error: data.error?.message || "Anthropic request failed", details: data },
         { status: anthropicResponse.status }
       );
+    }
+
+    const decisionText = data.content?.[0]?.text;
+    if (decisionText) {
+      await logTransaction(payload, parseDecisionText(decisionText));
     }
 
     return NextResponse.json(data);
