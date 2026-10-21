@@ -103,8 +103,9 @@ async function logTransaction(payload, decision) {
 export async function POST(request) {
   const payload = await request.json();
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  const mockMode = process.env.REALCHECK_MOCK === "true" || !apiKey;
 
-  if (process.env.REALCHECK_MOCK === "true") {
+  if (mockMode) {
     const decision = mockDecision(payload);
     await logTransaction(payload, decision);
 

@@ -55,7 +55,7 @@ ${JSON.stringify(signals, null, 2)}`;
 const presets = {
   legit: {
     label: "Likely legit",
-    color: "#22c55e",
+    color: "#10b981",
     signals: {
       device_id: null,
       ip_address: "102.89.44.10",
@@ -116,9 +116,9 @@ const presets = {
 };
 
 const decisionColors = {
-  APPROVE: { bg: "#052e16", border: "#16a34a", text: "#4ade80", badge: "#15803d" },
-  CHALLENGE: { bg: "#1c1400", border: "#d97706", text: "#fbbf24", badge: "#b45309" },
-  DECLINE: { bg: "#1c0a0a", border: "#dc2626", text: "#f87171", badge: "#b91c1c" }
+  APPROVE: { bg: "#0b1724", border: "#10b981", text: "#86efac", badge: "#14532d" },
+  CHALLENGE: { bg: "#1c1a12", border: "#f59e0b", text: "#fbbf24", badge: "#92400e" },
+  DECLINE: { bg: "#1d1115", border: "#ef4444", text: "#fca5a5", badge: "#991b1b" }
 };
 
 export default function RealCheck() {
@@ -284,297 +284,243 @@ export default function RealCheck() {
   const dc = result ? decisionColors[result.decision] : null;
 
   return (
-    <div
-      style={{
-        fontFamily: "'DM Mono', 'Fira Code', monospace",
-        background: "#0a0a0f",
-        minHeight: "100vh",
-        color: "#c8c8d8",
-        padding: "32px 24px",
-        maxWidth: 800,
-        margin: "0 auto"
-      }}
-    >
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#6366f1", boxShadow: "0 0 8px #6366f1" }} />
-          <span style={{ fontSize: 11, color: "#6366f1", letterSpacing: 3, textTransform: "uppercase" }}>RealCheck</span>
+    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
+      <header className="mb-6 flex flex-col gap-4 border-b border-[var(--border)] pb-5 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="section-label">RealCheck Sentinel</div>
+          <h1 className="mt-2 text-[1.75rem] font-semibold tracking-[-0.05em] text-white">Fraud Decisioning Engine</h1>
         </div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#f0f0ff", margin: 0, letterSpacing: -0.5 }}>
-          Fraud Decisioning Engine
-        </h1>
-        <p style={{ fontSize: 12, color: "#555570", margin: "6px 0 0" }}>
-          Adaptive / Explainable / Real-time
-        </p>
-      </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        {Object.entries(presets).map(([key, p]) => (
-          <button
-            key={key}
-            onClick={() => applyPreset(key)}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 6,
-              border: `1px solid ${activePreset === key ? p.color : "#2a2a3a"}`,
-              background: activePreset === key ? p.color + "22" : "transparent",
-              color: activePreset === key ? p.color : "#666680",
-              fontSize: 12,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all 0.15s"
-            }}
-          >
-            {p.label}
+        <div className="flex items-center gap-2 rounded-[0.25rem] border border-[var(--border)] bg-[var(--panel-1)] p-1">
+          <button className="rounded-[0.25rem] bg-[var(--primary-soft)] px-3 py-2 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-[var(--primary)]">
+            Fraud intelligence
           </button>
-        ))}
-      </div>
-
-      <div
-        style={{
-          background: "#10101a",
-          border: "1px solid #1e1e2e",
-          borderRadius: 10,
-          padding: "20px",
-          marginBottom: 20
-        }}
-      >
-        <div style={{ fontSize: 11, color: "#444460", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>
-          Transaction signals
+          <button className="px-3 py-2 text-[0.6875rem] uppercase tracking-[0.08em] text-[var(--text-muted)]">
+            POS reliability
+          </button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px" }}>
-          {Object.entries(signals).map(([key, val]) => (
-            <div key={key}>
-              <div style={{ fontSize: 11, color: "#555575", marginBottom: 4 }}>{key}</div>
-              {key === "device_id" ? (
-                <input
-                  value={val || "loading fingerprint..."}
-                  readOnly
-                  style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "5px 8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
-                />
-              ) : typeof val === "boolean" ? (
-                <select
-                  value={val.toString()}
-                  onChange={(e) => updateSignal(key, e.target.value === "true")}
-                  style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "5px 8px", fontSize: 12, fontFamily: "inherit" }}
+      </header>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="metric-card">
+          <div className="metric-label">Portfolio risk</div>
+          <div className="metric-value tabular-numbers">2.3%</div>
+          <div className="mt-3">
+            <span className="delta-badge delta-positive">▲ 0.4%</span>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-label">Avg decision time</div>
+          <div className="metric-value tabular-numbers">284 ms</div>
+          <div className="mt-3">
+            <span className="delta-badge delta-positive">▼ 41 ms</span>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-label">Chargeback exposure</div>
+          <div className="metric-value tabular-numbers">$43.2k</div>
+          <div className="mt-3">
+            <span className="delta-badge delta-negative">▼ 12.6%</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
+        <div className="surface-panel p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="section-label">Transaction signals</div>
+            <div className="flex gap-2">
+              {Object.entries(presets).map(([key, p]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => applyPreset(key)}
+                  className="rounded-[0.25rem] border px-2.5 py-1.5 text-[0.625rem] font-medium uppercase tracking-[0.08em]"
+                  style={{
+                    borderColor: activePreset === key ? p.color : "var(--border)",
+                    color: activePreset === key ? p.color : "var(--text-muted)",
+                    background: activePreset === key ? `${p.color}22` : "transparent"
+                  }}
                 >
-                  <option value="false">false</option>
-                  <option value="true">true</option>
-                </select>
-              ) : val === null ? (
-                <input
-                  value="null"
-                  onChange={(e) => updateSignal(key, e.target.value === "null" ? null : e.target.value)}
-                  style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "5px 8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
-                />
-              ) : typeof val === "number" ? (
-                <input
-                  type="number"
-                  value={val}
-                  onChange={(e) => updateSignal(key, Number(e.target.value))}
-                  style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "5px 8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
-                />
-              ) : (
-                <input
-                  value={val}
-                  onChange={(e) => updateSignal(key, e.target.value)}
-                  style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "5px 8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
-                />
-              )}
+                  {p.label}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
-
-      <button
-        onClick={runCheck}
-        disabled={loading}
-        style={{
-          width: "100%",
-          padding: "13px",
-          borderRadius: 8,
-          border: "1px solid #6366f1",
-          background: loading ? "#1a1a2e" : "#6366f122",
-          color: loading ? "#444460" : "#818cf8",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: loading ? "not-allowed" : "pointer",
-          fontFamily: "inherit",
-          letterSpacing: 1,
-          marginBottom: 20,
-          transition: "all 0.15s"
-        }}
-      >
-        {loading ? "analyzing signals..." : "RUN FRAUD CHECK"}
-      </button>
-
-      {error && (
-        <div style={{ background: "#1c0a0a", border: "1px solid #7f1d1d", borderRadius: 8, padding: 16, color: "#f87171", fontSize: 12, marginBottom: 20 }}>
-          {error}
-        </div>
-      )}
-
-      {result && dc && (
-        <div
-          style={{
-            background: dc.bg,
-            border: `1px solid ${dc.border}`,
-            borderRadius: 10,
-            padding: 24,
-            animation: "fadeIn 0.3s ease"
-          }}
-        >
-          <style>{`@keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }`}</style>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span
-                style={{
-                  padding: "4px 14px",
-                  borderRadius: 4,
-                  background: dc.badge,
-                  color: "#fff",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  letterSpacing: 2
-                }}
-              >
-                {result.decision}
-              </span>
-              <span style={{ fontSize: 12, color: dc.text }}>
-                {Math.round(result.confidence * 100)}% confidence
-              </span>
-            </div>
-            {result.challenge_method && (
-              <span style={{ fontSize: 11, color: "#fbbf24", border: "1px solid #92400e", padding: "3px 10px", borderRadius: 4 }}>
-                Challenge: {result.challenge_method}
-              </span>
-            )}
           </div>
 
-          <p style={{ fontSize: 13, color: dc.text, margin: "0 0 20px", lineHeight: 1.6 }}>
-            {result.reason}
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-            <div>
-              <div style={{ fontSize: 10, color: "#ef4444", letterSpacing: 2, marginBottom: 8, textTransform: "uppercase" }}>Risk factors</div>
-              {result.risk_factors.map((f, i) => (
-                <div key={i} style={{ fontSize: 12, color: "#fca5a5", marginBottom: 4 }}>
-                  ^ {f}
-                </div>
-              ))}
-            </div>
-            <div>
-              <div style={{ fontSize: 10, color: "#22c55e", letterSpacing: 2, marginBottom: 8, textTransform: "uppercase" }}>Safe factors</div>
-              {result.safe_factors.map((f, i) => (
-                <div key={i} style={{ fontSize: 12, color: "#86efac", marginBottom: 4 }}>
-                  + {f}
-                </div>
-              ))}
-            </div>
+          <div className="signal-grid">
+            {Object.entries(signals).map(([key, val]) => (
+              <div key={key}>
+                <div className="mb-2 text-[0.625rem] uppercase tracking-[0.08em] text-[var(--text-muted)]">{key}</div>
+                {key === "device_id" ? (
+                  <input
+                    value={val || "loading fingerprint..."}
+                    readOnly
+                    className="form-field tabular-numbers"
+                  />
+                ) : typeof val === "boolean" ? (
+                  <select
+                    value={val.toString()}
+                    onChange={(e) => updateSignal(key, e.target.value === "true")}
+                    className="selection-field"
+                  >
+                    <option value="false">false</option>
+                    <option value="true">true</option>
+                  </select>
+                ) : val === null ? (
+                  <input
+                    value="null"
+                    onChange={(e) => updateSignal(key, e.target.value === "null" ? null : e.target.value)}
+                    className="form-field"
+                  />
+                ) : typeof val === "number" ? (
+                  <input
+                    type="number"
+                    value={val}
+                    onChange={(e) => updateSignal(key, Number(e.target.value))}
+                    className="form-field tabular-numbers"
+                  />
+                ) : (
+                  <input
+                    value={val}
+                    onChange={(e) => updateSignal(key, e.target.value)}
+                    className="form-field"
+                  />
+                )}
+              </div>
+            ))}
           </div>
 
           <button
-            onClick={() => setRawJson(!rawJson)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#444460",
-              fontSize: 11,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              padding: 0,
-              letterSpacing: 1
-            }}
+            type="button"
+            onClick={runCheck}
+            disabled={loading}
+            className="button-primary mt-6 w-full"
+            style={{ opacity: loading ? 0.72 : 1, cursor: loading ? "not-allowed" : "pointer" }}
           >
-            {rawJson ? "hide" : "raw json"}
+            {loading ? "Analyzing signals..." : "Run fraud check"}
           </button>
 
-          {rawJson && (
-            <pre
-              style={{
-                marginTop: 12,
-                padding: 14,
-                background: "#05050f",
-                borderRadius: 6,
-                fontSize: 11,
-                color: "#888899",
-                overflow: "auto",
-                maxHeight: 200
-              }}
-            >
-              {JSON.stringify(result, null, 2)}
-            </pre>
+          {error && (
+            <div className="mt-4 rounded-[0.25rem] border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.1)] p-3 text-sm text-[#fca5a5]">
+              {error}
+            </div>
           )}
         </div>
-      )}
+
+        <aside className="surface-panel p-5">
+          <div className="section-label">Decision</div>
+
+          {result && dc ? (
+            <div className="mt-4 space-y-4" style={{ background: dc.bg, border: `1px solid ${dc.border}`, borderRadius: 6, padding: 16 }}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="status-pill danger" style={{ background: dc.badge, borderColor: dc.border, color: "#fff" }}>
+                  {result.decision}
+                </span>
+                {result.challenge_method && (
+                  <span className="status-pill warning">{result.challenge_method}</span>
+                )}
+              </div>
+
+              <div className="text-sm font-medium" style={{ color: dc.text }}>
+                {Math.round(result.confidence * 100)}% confidence
+              </div>
+
+              <p className="text-sm leading-6" style={{ color: dc.text }}>
+                {result.reason}
+              </p>
+
+              <div className="space-y-2">
+                <div className="text-[0.625rem] uppercase tracking-[0.08em] text-[var(--text-muted)]">Risk factors</div>
+                {result.risk_factors.map((item, index) => (
+                  <div key={index} className="text-sm text-[#fca5a5]">• {item}</div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-[0.625rem] uppercase tracking-[0.08em] text-[var(--text-muted)]">Safe factors</div>
+                {result.safe_factors.map((item, index) => (
+                  <div key={index} className="text-sm text-[#86efac]">• {item}</div>
+                ))}
+              </div>
+
+              <button type="button" onClick={() => setRawJson(!rawJson)} className="text-[0.625rem] uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                {rawJson ? "hide json" : "raw json"}
+              </button>
+
+              {rawJson && (
+                <pre className="code-block mt-2 max-h-[220px] overflow-auto text-[0.625rem] text-[#d1d5db]">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-[0.375rem] border border-dashed border-[var(--border-strong)] bg-[rgba(17,24,39,0.7)] p-4 text-sm leading-6 text-[var(--text-muted)]">
+              Submit a transaction to surface a structured risk decision, confidence score, and operational guidance.
+            </div>
+          )}
+        </aside>
+      </section>
 
       {challengeOpen && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 50 }}>
-          <div style={{ width: "100%", maxWidth: 440, background: "#10101a", border: "1px solid #d97706", borderRadius: 10, padding: 20 }}>
-            <div style={{ fontSize: 11, color: "#fbbf24", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Soft challenge</div>
-            <p style={{ fontSize: 12, color: "#c8c8d8", lineHeight: 1.6, marginTop: 0 }}>
+          <div className="surface-panel" style={{ width: "100%", maxWidth: 440, background: "#10101a", padding: 20 }}>
+            <div className="section-label" style={{ color: "#fbbf24" }}>Soft challenge</div>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
               This transaction needs OTP verification before approval.
             </p>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, color: "#555575", marginBottom: 4 }}>phone number</div>
+
+            <div className="mt-4">
+              <div className="mb-2 text-[0.625rem] uppercase tracking-[0.08em] text-[var(--text-muted)]">Phone number</div>
               <input
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 placeholder="+15551234567"
-                style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
+                className="form-field"
               />
             </div>
-            <button onClick={sendOtp} disabled={challengeLoading} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #6366f1", background: "#6366f122", color: "#818cf8", fontSize: 12, fontWeight: 600, cursor: challengeLoading ? "not-allowed" : "pointer", fontFamily: "inherit", marginBottom: 12 }}>
-              Send OTP
+
+            <button type="button" onClick={sendOtp} disabled={challengeLoading} className="button-primary mt-4 w-full">
+              {challengeLoading ? "Sending..." : "Send OTP"}
             </button>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, color: "#555575", marginBottom: 4 }}>code</div>
+
+            <div className="mt-4">
+              <div className="mb-2 text-[0.625rem] uppercase tracking-[0.08em] text-[var(--text-muted)]">Verification code</div>
               <input
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
                 placeholder="123456"
-                style={{ width: "100%", background: "#0a0a14", border: "1px solid #2a2a3a", borderRadius: 5, color: "#c8c8d8", padding: "8px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box" }}
+                className="form-field"
               />
             </div>
-            <button onClick={verifyOtp} disabled={challengeLoading} style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #d97706", background: "#1c1400", color: "#fbbf24", fontSize: 12, fontWeight: 600, cursor: challengeLoading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
+
+            <button type="button" onClick={verifyOtp} disabled={challengeLoading} className="mt-4 w-full rounded-[0.25rem] border border-[#f59e0b] bg-[#1c1400] px-3 py-2 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[#fbbf24]">
               Verify
             </button>
+
             {challengeStatus && (
-              <div style={{ marginTop: 12, color: challengeStatus.startsWith("✗") ? "#f87171" : "#86efac", fontSize: 12 }}>
+              <div className="mt-4 text-sm" style={{ color: challengeStatus.startsWith("✗") ? "#fca5a5" : "#86efac" }}>
                 {challengeStatus}
               </div>
             )}
-            <button onClick={() => setChallengeOpen(false)} style={{ marginTop: 14, background: "none", border: "none", color: "#666680", fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
-              close
+
+            <button type="button" onClick={() => setChallengeOpen(false)} className="mt-4 text-[0.625rem] uppercase tracking-[0.08em] text-[var(--text-dim)]">
+              Close
             </button>
           </div>
         </div>
       )}
 
-      <details style={{ marginTop: 28 }}>
-        <summary style={{ fontSize: 11, color: "#444460", cursor: "pointer", letterSpacing: 1, textTransform: "uppercase" }}>
+      <details className="mt-8 rounded-[0.375rem] border border-[var(--border)] bg-[rgba(17,24,39,0.7)] p-4">
+        <summary className="cursor-pointer text-[0.625rem] uppercase tracking-[0.12em] text-[var(--text-muted)]">
           View system prompt
         </summary>
-        <pre
-          style={{
-            marginTop: 12,
-            padding: 16,
-            background: "#10101a",
-            border: "1px solid #1e1e2e",
-            borderRadius: 8,
-            fontSize: 11,
-            color: "#666680",
-            whiteSpace: "pre-wrap",
-            lineHeight: 1.7,
-            maxHeight: 400,
-            overflow: "auto"
-          }}
-        >
+        <pre className="code-block mt-4 max-h-[260px] overflow-auto whitespace-pre-wrap text-[0.625rem] text-[#8b93a7]">
           {SYSTEM_PROMPT}
         </pre>
       </details>
-    </div>
+    </main>
   );
 }
